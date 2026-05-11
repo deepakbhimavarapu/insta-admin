@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from .config import settings
 from .database import get_db_connection, get_pending_review_count, init_db
-from .agents.scout import run_scout_agent
+from .agents.scout import run_scout_agent, ingest_single_story
 from .agents.editor import process_and_create_confession
 from .agents.publisher import publish_due_posts
 
@@ -241,3 +241,46 @@ def trigger_publishing(background_tasks: BackgroundTasks):
     """Triggers an asynchronous scan and publication of scheduled due posts."""
     background_tasks.add_task(publish_due_posts)
     return {"status": "success", "message": "Publisher scanner triggered in background."}
+
+class UserSubmission(BaseModel):
+    raw_text: str
+    location: Optional[str] = "Anonymous"
+    category: Optional[str] = "General"
+
+@app.post("/api/submissions")
+def create_user_submission(submission: UserSubmission, background_tasks: BackgroundTasks):
+    """Saves a follower's anonymous confession, runs de-duplication, and schedules a refill."""
+    if not submission.raw_text.strip() or len(submission.raw_text.strip()) < 20:
+        raise HTTPException(status_code=400, detail="Confession text must be at least 20 characters long.")
+        
+    sub_uuid = str(uuid.uuid4())
+    source_id = f"user_sub_{sub_uuid[:8]}"
+    
+    # Formulate context header if location/category is provided
+    combined_text = f"[{submission.category} in {submission.location}] {submission.raw_text}"
+    
+    # Run the standard deduplication ingestion pipeline
+    success = ingest_single_story(
+        source="user_submission",
+        source_id=source_id,
+        raw_text=combined_text,
+        author="anonymous",
+        url="user_submit"
+    )
+    
+    if not success:
+        return {
+            "status": "success",
+            "message": "Thank you for your submission! Our team is reviewing it.",
+            "duplicate": True
+        }
+        
+    # Trigger an asynchronous queue refill so that if we have fewer than 10 cards,
+    # this user submission immediately gets promoted to the dashboard!
+    background_tasks.add_task(run_refill_pipeline)
+    
+    return {
+        "status": "success",
+        "message": "Confession submitted successfully and sent to the editorial pipeline!",
+        "duplicate": False
+    }
