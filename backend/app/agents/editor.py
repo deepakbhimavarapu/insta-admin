@@ -59,7 +59,7 @@ def run_gemini_transliteration(raw_text: str, location: str) -> str:
     """
 
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash", system_instruction=system_instruction)
+        model = genai.GenerativeModel("gemini-2.5-flash", system_instruction=system_instruction)
         response = model.generate_content(raw_text)
         return response.text.strip()
     except Exception as e:
