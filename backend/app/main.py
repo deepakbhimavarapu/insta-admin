@@ -14,6 +14,7 @@ from .config import settings
 from .database import get_db_connection, get_pending_review_count, init_db
 from .agents.scout import run_scout_agent
 from .agents.editor import process_and_create_confession
+from .agents.publisher import publish_due_posts
 
 # Initialize FastAPI application
 app = FastAPI(title="Swayam-Admin API Engine", version="1.0.0")
@@ -234,3 +235,9 @@ def trigger_refill(background_tasks: BackgroundTasks):
     """Triggers an asynchronous refill of the dashboard queue."""
     background_tasks.add_task(run_refill_pipeline)
     return {"status": "success", "message": "Queue refill triggered in background."}
+
+@app.post("/api/publish/due")
+def trigger_publishing(background_tasks: BackgroundTasks):
+    """Triggers an asynchronous scan and publication of scheduled due posts."""
+    background_tasks.add_task(publish_due_posts)
+    return {"status": "success", "message": "Publisher scanner triggered in background."}

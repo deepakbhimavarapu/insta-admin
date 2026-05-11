@@ -14,7 +14,10 @@ import {
   ShieldCheck, 
   AlertTriangle,
   Flame,
-  Globe
+  Globe,
+  Download,
+  Copy,
+  CheckCheck
 } from "lucide-react";
 
 // Types representing backend models
@@ -49,6 +52,40 @@ export default function Dashboard() {
   const [selectedCaptionIndex, setSelectedCaptionIndex] = useState<Record<string, number>>({});
   const [customCaptions, setCustomCaptions] = useState<Record<string, string>>({});
   const [scheduleOffsets, setScheduleOffsets] = useState<Record<string, number>>({});
+  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
+
+  const handleCopyCaption = (id: string, text: string) => {
+    if (!text || !text.trim()) {
+      showToast("Caption is empty. Write or select a caption first!", "error");
+      return;
+    }
+    navigator.clipboard.writeText(text);
+    setCopiedStates((prev) => ({ ...prev, [id]: true }));
+    showToast("Caption copied to clipboard!", "success");
+    setTimeout(() => {
+      setCopiedStates((prev) => ({ ...prev, [id]: false }));
+    }, 2000);
+  };
+
+  const handleDownloadSlide = async (url: string, filename: string) => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const objectUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(objectUrl);
+      showToast("Image downloaded successfully!", "success");
+    } catch (err) {
+      console.error(err);
+      window.open(url, "_blank");
+      showToast("Opening image in new tab for manual saving.", "info");
+    }
+  };
 
   const showToast = (message: string, type: "success" | "info" | "error" = "success") => {
     setToast({ message, type });
@@ -311,7 +348,7 @@ export default function Dashboard() {
                 >
                   
                   {/* Visual Left: Image Slider Sheet */}
-                  <div className="w-full lg:w-[480px] shrink-0 space-y-3">
+                  <div className="w-full lg:w-[480px] shrink-0 space-y-4">
                     <div className="relative aspect-square w-full bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-900 shadow-lg group-hover:border-zinc-800/50 transition">
                       
                       {/* Image render element */}
@@ -361,6 +398,38 @@ export default function Dashboard() {
                           </div>
                         </>
                       )}
+                    </div>
+
+                    {/* Interactive Copy/Download Assistant */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => handleDownloadSlide(imgUrl, `swayam_slide_${item.id}_${currentSlide + 1}.jpg`)}
+                        className="py-2.5 px-3 bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5 text-zinc-400" />
+                        Download Slide {currentSlide + 1}
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const capIdx = selectedCaptionIndex[item.id] ?? 0;
+                          const caption = capIdx === 3 ? (customCaptions[item.id] || "") : item.caption_options[capIdx];
+                          handleCopyCaption(item.id, caption);
+                        }}
+                        className="py-2.5 px-3 bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {copiedStates[item.id] ? (
+                          <>
+                            <CheckCheck className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                            Copy Caption
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
 
