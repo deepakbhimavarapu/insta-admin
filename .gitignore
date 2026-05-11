@@ -1,0 +1,30 @@
+# Security: Never commit environment configurations or api keys
+.env
+
+# Database: Keep SQLite files local
+swayam.db
+swayam.db-journal
+
+# Assets: Avoid clogging the repo with temporary generated image cards
+public/assets/slide_*.jpg
+
+# Python caching & environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+
+# Frontend (Next.js) caching & modules
+node_modules/
+.next/
+out/
+build/
+.vercel
+
+# System files
+.DS_Store
+Thumbs.db
