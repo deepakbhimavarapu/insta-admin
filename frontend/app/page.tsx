@@ -110,7 +110,7 @@ export default function Dashboard() {
       data.items.forEach((item) => {
         slides[item.id] = 0;
         captions[item.id] = 0;
-        offsets[item.id] = 4; // Default schedule +4 hours
+        offsets[item.id] = -1; // Default to AI Auto-Pace (-1)
       });
 
       setActiveSlideIndex((prev) => ({ ...slides, ...prev }));
@@ -494,7 +494,7 @@ export default function Dashboard() {
                           <span>Schedule Publication</span>
                         </div>
                         <div className="flex gap-2 flex-wrap">
-                          {[4, 8, 12, 24].map((hours) => (
+                          {[-1, 4, 8, 12, 24].map((hours) => (
                             <button
                               key={hours}
                               onClick={() => setScheduleOffsets((prev) => ({ ...prev, [item.id]: hours }))}
@@ -504,7 +504,7 @@ export default function Dashboard() {
                                   : "bg-zinc-950/30 border-zinc-900 text-zinc-400 hover:border-zinc-800"
                               }`}
                             >
-                              +{hours} hours
+                              {hours === -1 ? "🤖 AI Auto-Pace (+4h)" : `+${hours} hours`}
                             </button>
                           ))}
                         </div>

@@ -201,8 +201,25 @@ def review_story(id: str, action_data: ReviewAction, background_tasks: Backgroun
         # Update pending_review status
         cursor.execute("UPDATE pending_review SET status = 'approved' WHERE id = ?", (id,))
         
-        # Calculate schedule time
-        scheduled_time = (datetime.now(timezone.utc) + timedelta(hours=action_data.schedule_hours)).isoformat()
+        # Calculate schedule time with AI auto-spacing queue pacing algorithm
+        # Grab the maximum scheduled_at timestamp of any active queued posts
+        cursor.execute("SELECT MAX(scheduled_at) FROM published_queue WHERE status = 'queued'")
+        max_scheduled_row = cursor.fetchone()
+        
+        spacing_hours = action_data.schedule_hours if action_data.schedule_hours and action_data.schedule_hours > 0 else 4
+        
+        if max_scheduled_row and max_scheduled_row[0]:
+            try:
+                # Add spacing hours after the last queued post for seamless pacing
+                latest_dt = datetime.fromisoformat(max_scheduled_row[0])
+                scheduled_dt = latest_dt + timedelta(hours=spacing_hours)
+            except Exception:
+                scheduled_dt = datetime.now(timezone.utc) + timedelta(hours=spacing_hours)
+        else:
+            # If queue is completely empty, post in 2 hours
+            scheduled_dt = datetime.now(timezone.utc) + timedelta(hours=2)
+            
+        scheduled_time = scheduled_dt.isoformat()
         
         # Insert into published_queue
         pub_id = str(uuid.uuid4())
@@ -211,7 +228,7 @@ def review_story(id: str, action_data: ReviewAction, background_tasks: Backgroun
             VALUES (?, ?, ?, ?, 'queued', ?)
         """, (pub_id, id, action_data.selected_caption, scheduled_time, now_str))
         
-        print(f"Story {id} approved. Scheduled to post in {action_data.schedule_hours} hours at {scheduled_time}.")
+        print(f"Story {id} approved. AI Scheduled to post at {scheduled_time} (Auto-spaced after previous queue).")
         
     elif action_data.action == "reject":
         # Simply mark as rejected

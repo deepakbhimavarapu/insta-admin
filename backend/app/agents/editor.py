@@ -49,13 +49,17 @@ def run_gemini_transliteration(raw_text: str, location: str) -> str:
 
     CRITICAL RULES:
     1. LINGUISTIC AUTHENTICITY: Blend English and Telugu naturally, exactly how an MS student or IT techie would speak to their friends.
-       - Use slang like: "bhayya", "mava", "frustrations", "onsite", "h1b active", "roommates gola", "pelli proposals", "daridram", "sankanaaki poyindi".
-       - Example input: "My manager scolded me because I made a small mistake in the codebase."
-       - Example rewrite: "Manager toh warning highly active aindi bhayya. Chinna error select chesa codebase lo, daanike full gola chesadu."
-    2. ABSOLUTE ANONYMITY: Redact all specific company names, real names, and specific apartment numbers. Replace them with generic terms inside brackets.
-       - e.g., 'Infosys' -> '[Service-Based Company]', 'Apple' -> '[FAANG Company]', 'Suresh' -> '[My Roommate]'.
-    3. KEEP IT FIRST-PERSON: The text must feel like an authentic, personal diary confession.
-    4. NO BULLET POINTS / NO INTROS: Return ONLY the rewritten story text. No explanations, no greeting.
+       - Use slang like: "bhayya", "mava", "frustrations", "onsite", "h1b active", "roommates gola", "pelli proposals", "daridram", "sankanaaki poyindi", "chillara", "scene active", "tea leaked", "chaala over action".
+    2. SPICE, DRAMA & PSEUDONYMS: Fictionalize real names and company specifics with made-up, hyper-realistic common Telugu names (e.g., Bunty, Srinu, Prasad, Swapna, Harika, Akhila, Chinna, Bobby, Lucky) to keep the gossip extremely juicy and spicy! 
+       - Avoid robotic brackets like '[My Roommate]' or '[Manager]'. Use casual pseudonyms like 'Ma flatmate Bunty gadu' or 'Ma manager Prasad gadu' or 'Chinna and Swapna scene'.
+       - Generalize tech companies organically (e.g., 'Infosys' -> 'oka top service company' or 'pedda consultancy').
+    3. FOLLOWER-TO-ADMIN INTRODUCTION: Start the post with a casual, relatable follower intro to the admin, exactly like real Instagram confessions pages.
+       - e.g., "Arey admin, please keep me anonymous. Direct ga matter loki velthe..."
+       - e.g., "Hey admin, please hide my name. Ma New Jersey consultancy story share chesthunna..."
+       - e.g., "Admin bhayya, low-key sharing some extreme tea. Hide my details mava..."
+       - Always randomize this intro style so posts look unique!
+    4. FIRST-PERSON DRAMATIC DIARY: The confession must feel highly energetic, emotional, juicy, and personal.
+    5. NO BULLET POINTS / NO META COMMENTS: Return ONLY the rewritten story text. No explanations, no hashtags inside the story box.
     """
 
     try:
@@ -118,7 +122,7 @@ def render_confession_slides(adapted_text: str, review_id: str) -> List[str]:
     # Margin settings
     margin_left = 120
     margin_right = 100
-    margin_top = 140
+    margin_top = 180
     margin_bottom = 120
     max_text_width = W - margin_left - margin_right
     
@@ -128,6 +132,7 @@ def render_confession_slides(adapted_text: str, review_id: str) -> List[str]:
     
     # Font setup
     font = load_handwriting_font(34)
+    header_font = load_handwriting_font(24)
     
     # Split text into paragraphs and wrap each
     paragraphs = adapted_text.split('\n')
@@ -153,6 +158,10 @@ def render_confession_slides(adapted_text: str, review_id: str) -> List[str]:
     generated_paths = []
     total_slides = len(slide_chunks)
     
+    # Fetch current date formatted like authentic diary books
+    from datetime import datetime
+    date_str = datetime.now().strftime("%d / %m / %y")
+    
     for slide_idx, chunk in enumerate(slide_chunks):
         # 1. Create Ivory Notebook Canvas
         # Background color #FAF8F5 (Soft ivory linen texture look)
@@ -167,6 +176,13 @@ def render_confession_slides(adapted_text: str, review_id: str) -> List[str]:
         # 3. Draw Red Margin guide line
         # Red line: #F5C6C6
         draw.line([(margin_left - 30, 0), (margin_left - 30, H)], fill="#F5C6C6", width=3)
+        
+        # 3b. Draw branding watermarks on the top header space
+        # Left channel branding
+        draw.text((margin_left, 95), "@swayam.confessions", fill="#7A8B9E", font=header_font)
+        # Right date stamp
+        date_text = f"DATE: {date_str}"
+        draw.text((W - margin_right - 220, 95), date_text, fill="#7A8B9E", font=header_font)
         
         # 4. Write text on the notebook lines
         current_y = margin_top - 38  # Adjust text slightly above the blue lines

@@ -139,7 +139,54 @@ def run_scout_agent():
         except Exception as e:
             print(f"Reddit scouting encountered an error: {e}")
     else:
-        print("Reddit PRAW credentials not set (or praw not installed). Skipping real-time Reddit crawling and using pre-seeded mocks.")
+        print("Reddit PRAW credentials not set (or praw not installed). Skipping real-time Reddit crawling.")
+        
+        # Synthesize brand-new dynamic raw confessions using Gemini to allow infinite testing!
+        if settings.GEMINI_API_KEY:
+            print("Gemini API key is configured. Synthesizing 3 brand-new unique anonymous confessions for local testing...")
+            try:
+                genai.configure(api_key=settings.GEMINI_API_KEY)
+                
+                topics = [
+                    "gossip about a consultancy manager named Prasad who is blackmailing an OPT student named Srinu for running fake payrolls in New Jersey",
+                    "hilarious roommate fight in Chicago where a guy named Bunty cooks smelly non-veg curry on Thursday, which is a strictly veg day for his flatmate Chinna, and now they are dividing the fridge into physical borders",
+                    "matchmaking marriage proposal drama in Dallas where a girl named Swapna rejected a techie named Akhil because his I-140 priority date is late, and Akhil found out Swapna married a local motel owner",
+                    "corporate tea about an onshore manager named Bobby who holds status calls at 11 PM EST just to brag about his golf skills to scared H1B OPT developers",
+                    "funny dating drama in Bay Area where a girl named Harika went on a boba date with Akhil, who split a $12 bill down to the exact penny and Venmo requested her while driving a Model Y",
+                    "Masters student named Kalyan in London who is secretly working cash-in-hand shifts at a local off-license grocery and hid in the store room when inspectors visited",
+                    "gossip about a consultant named Lucky who lied on his resume about having 8 years of Java experience, got placed in a client, and is now paying a proxy developer named Sandeep to do his daily coding tasks",
+                    "petty fight in New York between Telugu housemates over who is stealing the special avakaya pickle bottles sent by mom from Hyderabad",
+                    "consultancy scandal where a vendor named Venkat promised H1B sponsorship, took a deposit from Akhila, and then vanished/ghosted her calls",
+                    "Matchmaking setup where an NRI guy named Srinu went to Hyderabad for pelli choopulu and the girl asked him what his credit score and 401k balance is before saying hello"
+                ]
+                
+                # Pick 3 random topics to guarantee diversity on every run
+                selected_topics = random.sample(topics, 3)
+                
+                for idx, topic in enumerate(selected_topics):
+                    prompt = f"""
+                    Write a highly realistic, raw, first-person anonymous confession written in simple English by a Telugu NRI student or IT professional.
+                    Topic context: {topic}.
+                    Focus on making it sound extremely authentic, emotional, raw, and full of natural frustration or humor.
+                    Do NOT include any hashtags, titles, or intros. Return ONLY the raw story confession text itself, around 80 to 120 words.
+                    """
+                    model = genai.GenerativeModel("gemini-2.5-flash")
+                    response = model.generate_content(prompt)
+                    raw_text = response.text.strip()
+                    
+                    if raw_text:
+                        sub_id = f"synth_{uuid.uuid4().hex[:8]}"
+                        ingest_single_story(
+                            source="gemini_synthesizer",
+                            source_id=sub_id,
+                            raw_text=raw_text,
+                            author="synthetic_user",
+                            url="gemini_synth"
+                        )
+            except Exception as e:
+                print(f"Failed to synthesize dynamic confessions: {e}")
+        else:
+            print("GEMINI_API_KEY not configured. Cannot run dynamic confession generator fallback.")
 
 if __name__ == "__main__":
     run_scout_agent()
