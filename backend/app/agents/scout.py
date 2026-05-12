@@ -148,16 +148,27 @@ def run_scout_agent():
                 genai.configure(api_key=settings.GEMINI_API_KEY)
                 
                 topics = [
+                    # 💔 BREAKUPS & RELATIONSHIPS
+                    "emotional breakup story where Akhil got laid off from his IT job in Seattle, and his girlfriend Harika broke up with him because her parents pressured her to find a stable green card holder, dealing with job hunt and heartbreak",
+                    "juicy gossip about a Masters student named Ramya who is secretly dating her flatmate Srinu in Dallas, but they hide it from their 4 other housemates to avoid teasing, leading to hilarious midnight kitchen dates",
+                    "breakup drama where Bunty in New Jersey discovered his long-distance girlfriend Swapna in Hyderabad was secretly dating her office colleague, leading to a massive 3 AM WhatsApp confrontation",
+                    "petty relationship drama in London where Lucky expects his girlfriend Harika to split everything 50/50, including grocery shopping and $5 tube tickets, even though he drives a brand-new BMW and she is a struggling student",
+                    
+                    # 💍 MARRIAGE & PELLI CHOOPULU
+                    "comical marriage proposal setup where Kalyan went to Hyderabad for pelli choopulu with Akhila, and her father demanded a detailed Excel sheet of his US credit score, 401k savings, and stock portfolio before proceeding",
+                    "post-marriage gola where a newlywed named Akhila in Dallas is frustrated because her mother-in-law visited from India and started micromanaging how she cooks Sona Masoori rice and cleans the house, and her husband Prasad refuses to take her side",
+                    "Matchmaking setup where Srinu went to Hyderabad for pelli choopulu and the girl asked him what his credit score and 401k balance is before saying hello",
+                    "matchmaking marriage proposal drama in Dallas where a girl named Swapna rejected Akhil because his H1B/I-140 priority date is late, and Akhil found out Swapna ended up marrying a local motel owner",
+                    
+                    # 🏢 CORPORATE SCANDALS & ROOMMATES
                     "gossip about a consultancy manager named Prasad who is blackmailing an OPT student named Srinu for running fake payrolls in New Jersey",
                     "hilarious roommate fight in Chicago where a guy named Bunty cooks smelly non-veg curry on Thursday, which is a strictly veg day for his flatmate Chinna, and now they are dividing the fridge into physical borders",
-                    "matchmaking marriage proposal drama in Dallas where a girl named Swapna rejected a techie named Akhil because his I-140 priority date is late, and Akhil found out Swapna married a local motel owner",
                     "corporate tea about an onshore manager named Bobby who holds status calls at 11 PM EST just to brag about his golf skills to scared H1B OPT developers",
                     "funny dating drama in Bay Area where a girl named Harika went on a boba date with Akhil, who split a $12 bill down to the exact penny and Venmo requested her while driving a Model Y",
                     "Masters student named Kalyan in London who is secretly working cash-in-hand shifts at a local off-license grocery and hid in the store room when inspectors visited",
                     "gossip about a consultant named Lucky who lied on his resume about having 8 years of Java experience, got placed in a client, and is now paying a proxy developer named Sandeep to do his daily coding tasks",
                     "petty fight in New York between Telugu housemates over who is stealing the special avakaya pickle bottles sent by mom from Hyderabad",
-                    "consultancy scandal where a vendor named Venkat promised H1B sponsorship, took a deposit from Akhila, and then vanished/ghosted her calls",
-                    "Matchmaking setup where an NRI guy named Srinu went to Hyderabad for pelli choopulu and the girl asked him what his credit score and 401k balance is before saying hello"
+                    "consultancy scandal where a vendor named Venkat promised H1B sponsorship, took a deposit from Akhila, and then vanished/ghosted her calls"
                 ]
                 
                 # Pick 3 random topics to guarantee diversity on every run
