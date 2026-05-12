@@ -100,7 +100,7 @@ def ingest_single_story(source: str, source_id: str, raw_text: str, author: Opti
     return success
 
 def run_scout_agent():
-    """Scout Agent entry point. Connects to Reddit if PRAW is available, otherwise uses pre-seeds/mock data."""
+    """Scout Agent entry point. Completely relies on Gemini 2.5 Flash story synthesis."""
     print("Scout Agent initiated...")
     
     # Seed local DB first if empty
@@ -111,93 +111,63 @@ def run_scout_agent():
             seed_count += 1
     print(f"Completed seeding: {seed_count} stories added.")
 
-    # Reddit scraping check
-    if praw and settings.REDDIT_CLIENT_ID and settings.REDDIT_CLIENT_SECRET:
-        print("Reddit PRAW API Credentials found! Connecting to Reddit...")
+    # Always synthesize brand-new dynamic raw confessions using Gemini for realistic, spicy diaspora content!
+    if settings.GEMINI_API_KEY:
+        print("Gemini API key is configured. Synthesizing 3 brand-new unique anonymous confessions...")
         try:
-            reddit = praw.Reddit(
-                client_id=settings.REDDIT_CLIENT_ID,
-                client_secret=settings.REDDIT_CLIENT_SECRET,
-                user_agent=settings.REDDIT_USER_AGENT
-            )
+            genai.configure(api_key=settings.GEMINI_API_KEY)
             
-            subreddits = ["msinus", "h1b", "TeluguNRIs"]
-            for sub_name in subreddits:
-                print(f"Scouting r/{sub_name} rising posts...")
-                subreddit = reddit.subreddit(sub_name)
-                # Fetch rising submissions
-                for submission in subreddit.rising(limit=10):
-                    # Filter for self-text posts with length > 50 characters
-                    if submission.is_self and len(submission.selftext) > 50:
-                        ingest_single_story(
-                            source="reddit",
-                            source_id=submission.id,
-                            raw_text=submission.selftext,
-                            author=str(submission.author),
-                            url=submission.url
-                        )
+            topics = [
+                # 💔 BREAKUPS & RELATIONSHIPS
+                "emotional breakup story where Akhil got laid off from his IT job in Seattle, and his girlfriend Harika broke up with him because her parents pressured her to find a stable green card holder, dealing with job hunt and heartbreak",
+                "juicy gossip about a Masters student named Ramya who is secretly dating her flatmate Srinu in Dallas, but they hide it from their 4 other housemates to avoid teasing, leading to hilarious midnight kitchen dates",
+                "breakup drama where Bunty in New Jersey discovered his long-distance girlfriend Swapna in Hyderabad was secretly dating her office colleague, leading to a massive 3 AM WhatsApp confrontation",
+                "petty relationship drama in London where Lucky expects his girlfriend Harika to split everything 50/50, including grocery shopping and $5 tube tickets, even though he drives a brand-new BMW and she is a struggling student",
+                
+                # 💍 MARRIAGE & PELLI CHOOPULU
+                "comical marriage proposal setup where Kalyan went to Hyderabad for pelli choopulu with Akhila, and her father demanded a detailed Excel sheet of his US credit score, 401k savings, and stock portfolio before proceeding",
+                "post-marriage gola where a newlywed named Akhila in Dallas is frustrated because her mother-in-law visited from India and started micromanaging how she cooks Sona Masoori rice and cleans the house, and her husband Prasad refuses to take her side",
+                "Matchmaking setup where Srinu went to Hyderabad for pelli choopulu and the girl asked him what his credit score and 401k balance is before saying hello",
+                "matchmaking marriage proposal drama in Dallas where a girl named Swapna rejected Akhil because his H1B/I-140 priority date is late, and Akhil found out Swapna ended up marrying a local motel owner",
+                
+                # 🏢 CORPORATE SCANDALS & ROOMMATES
+                "gossip about a consultancy manager named Prasad who is blackmailing an OPT student named Srinu for running fake payrolls in New Jersey",
+                "hilarious roommate fight in Chicago where a guy named Bunty cooks smelly non-veg curry on Thursday, which is a strictly veg day for his flatmate Chinna, and now they are dividing the fridge into physical borders",
+                "corporate tea about an onshore manager named Bobby who holds status calls at 11 PM EST just to brag about his golf skills to scared H1B OPT developers",
+                "funny dating drama in Bay Area where a girl named Harika went on a boba date with Akhil, who split a $12 bill down to the exact penny and Venmo requested her while driving a Model Y",
+                "Masters student named Kalyan in London who is secretly working cash-in-hand shifts at a local off-license grocery and hid in the store room when inspectors visited",
+                "gossip about a consultant named Lucky who lied on his resume about having 8 years of Java experience, got placed in a client, and is now paying a proxy developer named Sandeep to do his daily coding tasks",
+                "petty fight in New York between Telugu housemates over who is stealing the special avakaya pickle bottles sent by mom from Hyderabad",
+                "consultancy scandal where a vendor named Venkat promised H1B sponsorship, took a deposit from Akhila, and then vanished/ghosted her calls"
+            ]
+            
+            # Pick 3 random topics to guarantee diversity on every run
+            selected_topics = random.sample(topics, 3)
+            
+            for idx, topic in enumerate(selected_topics):
+                prompt = f"""
+                Write a highly realistic, raw, first-person anonymous confession written in simple English by a Telugu NRI student or IT professional.
+                Topic context: {topic}.
+                Focus on making it sound extremely authentic, emotional, raw, and full of natural frustration or humor.
+                Do NOT include any hashtags, titles, or intros. Return ONLY the raw story confession text itself, around 80 to 120 words.
+                """
+                model = genai.GenerativeModel("gemini-2.5-flash")
+                response = model.generate_content(prompt)
+                raw_text = response.text.strip()
+                
+                if raw_text:
+                    sub_id = f"synth_{uuid.uuid4().hex[:8]}"
+                    ingest_single_story(
+                        source="gemini_synthesizer",
+                        source_id=sub_id,
+                        raw_text=raw_text,
+                        author="synthetic_user",
+                        url="gemini_synth"
+                    )
         except Exception as e:
-            print(f"Reddit scouting encountered an error: {e}")
+            print(f"Failed to synthesize dynamic confessions: {e}")
     else:
-        print("Reddit PRAW credentials not set (or praw not installed). Skipping real-time Reddit crawling.")
-        
-        # Synthesize brand-new dynamic raw confessions using Gemini to allow infinite testing!
-        if settings.GEMINI_API_KEY:
-            print("Gemini API key is configured. Synthesizing 3 brand-new unique anonymous confessions for local testing...")
-            try:
-                genai.configure(api_key=settings.GEMINI_API_KEY)
-                
-                topics = [
-                    # 💔 BREAKUPS & RELATIONSHIPS
-                    "emotional breakup story where Akhil got laid off from his IT job in Seattle, and his girlfriend Harika broke up with him because her parents pressured her to find a stable green card holder, dealing with job hunt and heartbreak",
-                    "juicy gossip about a Masters student named Ramya who is secretly dating her flatmate Srinu in Dallas, but they hide it from their 4 other housemates to avoid teasing, leading to hilarious midnight kitchen dates",
-                    "breakup drama where Bunty in New Jersey discovered his long-distance girlfriend Swapna in Hyderabad was secretly dating her office colleague, leading to a massive 3 AM WhatsApp confrontation",
-                    "petty relationship drama in London where Lucky expects his girlfriend Harika to split everything 50/50, including grocery shopping and $5 tube tickets, even though he drives a brand-new BMW and she is a struggling student",
-                    
-                    # 💍 MARRIAGE & PELLI CHOOPULU
-                    "comical marriage proposal setup where Kalyan went to Hyderabad for pelli choopulu with Akhila, and her father demanded a detailed Excel sheet of his US credit score, 401k savings, and stock portfolio before proceeding",
-                    "post-marriage gola where a newlywed named Akhila in Dallas is frustrated because her mother-in-law visited from India and started micromanaging how she cooks Sona Masoori rice and cleans the house, and her husband Prasad refuses to take her side",
-                    "Matchmaking setup where Srinu went to Hyderabad for pelli choopulu and the girl asked him what his credit score and 401k balance is before saying hello",
-                    "matchmaking marriage proposal drama in Dallas where a girl named Swapna rejected Akhil because his H1B/I-140 priority date is late, and Akhil found out Swapna ended up marrying a local motel owner",
-                    
-                    # 🏢 CORPORATE SCANDALS & ROOMMATES
-                    "gossip about a consultancy manager named Prasad who is blackmailing an OPT student named Srinu for running fake payrolls in New Jersey",
-                    "hilarious roommate fight in Chicago where a guy named Bunty cooks smelly non-veg curry on Thursday, which is a strictly veg day for his flatmate Chinna, and now they are dividing the fridge into physical borders",
-                    "corporate tea about an onshore manager named Bobby who holds status calls at 11 PM EST just to brag about his golf skills to scared H1B OPT developers",
-                    "funny dating drama in Bay Area where a girl named Harika went on a boba date with Akhil, who split a $12 bill down to the exact penny and Venmo requested her while driving a Model Y",
-                    "Masters student named Kalyan in London who is secretly working cash-in-hand shifts at a local off-license grocery and hid in the store room when inspectors visited",
-                    "gossip about a consultant named Lucky who lied on his resume about having 8 years of Java experience, got placed in a client, and is now paying a proxy developer named Sandeep to do his daily coding tasks",
-                    "petty fight in New York between Telugu housemates over who is stealing the special avakaya pickle bottles sent by mom from Hyderabad",
-                    "consultancy scandal where a vendor named Venkat promised H1B sponsorship, took a deposit from Akhila, and then vanished/ghosted her calls"
-                ]
-                
-                # Pick 3 random topics to guarantee diversity on every run
-                selected_topics = random.sample(topics, 3)
-                
-                for idx, topic in enumerate(selected_topics):
-                    prompt = f"""
-                    Write a highly realistic, raw, first-person anonymous confession written in simple English by a Telugu NRI student or IT professional.
-                    Topic context: {topic}.
-                    Focus on making it sound extremely authentic, emotional, raw, and full of natural frustration or humor.
-                    Do NOT include any hashtags, titles, or intros. Return ONLY the raw story confession text itself, around 80 to 120 words.
-                    """
-                    model = genai.GenerativeModel("gemini-2.5-flash")
-                    response = model.generate_content(prompt)
-                    raw_text = response.text.strip()
-                    
-                    if raw_text:
-                        sub_id = f"synth_{uuid.uuid4().hex[:8]}"
-                        ingest_single_story(
-                            source="gemini_synthesizer",
-                            source_id=sub_id,
-                            raw_text=raw_text,
-                            author="synthetic_user",
-                            url="gemini_synth"
-                        )
-            except Exception as e:
-                print(f"Failed to synthesize dynamic confessions: {e}")
-        else:
-            print("GEMINI_API_KEY not configured. Cannot run dynamic confession generator fallback.")
+        print("GEMINI_API_KEY not configured. Cannot run dynamic confession generator.")
 
 if __name__ == "__main__":
     run_scout_agent()
